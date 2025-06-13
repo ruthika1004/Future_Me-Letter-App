@@ -1,39 +1,24 @@
-// const express = require('express');
-// const router = express.Router();
-// const { saveLetter } = require('../controllers/letterController');
-
-// // Route to save letter
-// router.post('/', saveLetter);
-
-// module.exports = router;
-
-// // Explanation:
-// // POST /api/letters will call the saveLetter function you just made.
-
-// // routes/letterRoutes.js
-// const express = require('express');
-// const router = express.Router();
-// const { saveLetter, getLetters } = require('../controllers/letterController');
-// const auth = require('../middleware/authMiddleware');
-
-// // Routes
-// router.post('/save', auth, saveLetter);     // Save letter
-// router.get('/', auth, getLetters);          // Get letters
-
-// module.exports = router;
-
-
 const express = require('express');
 const router = express.Router();
 const { saveLetter, getLetters } = require('../controllers/letterController');
 const auth = require('../middleware/authMiddleware');
-const Letter = require('../models/Letter'); // ✅ Add this
+const Letter = require('../models/Letter');
 
-// Routes
-router.post('/save', auth, saveLetter);     // Save letter
-router.get('/', auth, getLetters);          // Get letters
+// ✅ Route to save a letter (requires auth)
+router.post('/save', auth, saveLetter);
 
-// Debug route - get all letters (for dev/testing only)
+// ✅ Route to get all letters for logged-in user (used in frontend)
+router.get('/my', auth, async (req, res) => {
+  try {
+    const letters = await Letter.find({ user: req.user.id }).sort({ deliveryDate: 1 });
+    res.json(letters);
+  } catch (err) {
+    console.error('Fetch user letters failed:', err);
+    res.status(500).json({ error: 'Server error fetching letters' });
+  }
+});
+
+// ✅ Optional: Get all letters in DB (for dev/test)
 router.get('/all', async (req, res) => {
   try {
     const letters = await Letter.find();
@@ -42,9 +27,5 @@ router.get('/all', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch letters' });
   }
 });
-
-module.exports = router;
-
-// http://localhost:5000/api/letters/all
 
 module.exports = router;
